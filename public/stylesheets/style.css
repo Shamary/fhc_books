@@ -1,0 +1,119 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.week_cont{
+  height:70px;
+  margin-bottom: 50px;
+}
+
+.week_label{
+  margin-top:10px;
+  font-size: 12pt;
+}
+
+#books_table th{
+  cursor: pointer;
+  color:white;
+  text-decoration:none;
+}
+
+.overlay{
+  visibility: hidden;
+  position: fixed;
+  top:0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background:rgba(0, 0, 0, 0.7);
+  transition: opacity 500ms;
+  opacity: 0;
+  z-index: 2;
+}
+
+.overlay:target{
+  visibility: visible;
+  opacity: 1;
+}
+
+.popup{
+  width:300px;
+  height: 460px;
+  top:20%;
+  left:38%;
+  transition: all 5s ease-in-out;
+  position: relative;
+}
+
+.close{
+  position: absolute;
+  top:20px;
+  right:20px;
+  font-size: 13pt;
+  transition: all 200ms;
+}
+
+.edit_content{
+  position: absolute;
+  top:50px;
+}
+
+/*#edit_form input{
+  width:80px;
+
+  margin-left: 20px;
+}*/
+
+#edit_form label{
+  margin-top:10px;
+}
+
+.input_div{
+  width: 270px;
+  border-radius: 7px;
+  background-color: #393e44;
+  border: 2px solid #2d3035;
+  outline:none;
+
+  color:white;
+}
+
+.edit_button{
+  border:1px solid #2d3035;
+  padding:10px;
+  margin-top:15px;
+  cursor: pointer;
+  background-color: #ff3842;
+  color:white;
+  transition: all 500ms ease-in-out;
+}
+
+.edit_button:hover{
+  background-color: white;
+  color:black;
+}
+
+a:link {
+  text-decoration: none;
+  color:inherit;
+}
+
+a:visited {
+  text-decoration: none;
+  color:inherit;
+}
+
+a:hover {
+  text-decoration: none;
+  color:inherit;
+}
+
+a:active {
+  text-decoration: none;
+  color:inherit;
+}
