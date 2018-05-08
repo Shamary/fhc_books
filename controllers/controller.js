@@ -110,5 +110,25 @@ exports.updateTable=function(req,res)
 
 exports.updateDB=function(req,res)
 {
-    
+    let loans=req.body.loans;
+    let deposits=req.body.deposits;
+    let cards=req.body.debit_cards;
+    let membership=req.body.membership;
+    let iTransact=req.body.itransact;
+    let FIP=req.body.fip;
+
+    let day=req.body.day;
+    let week=req.body.week;
+
+    sql= "UPDATE books SET loans = "+loans+","+"deposits="+deposits+",debit_cards="+cards+",membership="+membership+
+         ",iTransact="+iTransact+",FIP="+FIP+" WHERE week = "+week+" AND day = "+day+"";
+
+    db.query(sql,function(err){
+        if(err)
+        {
+            throw err;
+        }
+
+        res.redirect("/");
+    })
 }

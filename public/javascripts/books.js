@@ -58,6 +58,9 @@ $(document).ready(function(e){
 
         $("#day").text(days[pos]);
 
+        $("#day0").val(pos);
+        $("#week").val($("#sel_week").val());
+
         let data=table.column(pos).data();
 
         $("#loans").val(data[0]);
