@@ -2,8 +2,15 @@
 
 $(document).ready(function(e){
    
+    const WEEKLY_ACTUAL=1, WEEKLY_TARGET =2, WEEKLY_DIFF=3,
+          YTD_ACTUAL = 4, YTD_TARGET = 5, YTD_DIFF = 6;
+
+    
     var labels=["Loans", "Deposits","Debit Cards","Membership","iTransact","FIP"];
-    var days={1:"Monday",2:"Tuesday",3:"Wednesday",4:"Thursday",5:"Friday"};
+    var days={1:"Monday",2:"Tuesday",3:"Wednesday",4:"Thursday",5:"Friday", 6:"Weekly Actual", 7: "Weekly Target", 8: "Weekly Difference",
+              9: "YTD Actual", 10: "YTD Target", 11: "YTD Difference"};
+    var type = {6:WEEKLY_ACTUAL,7:WEEKLY_TARGET,8:WEEKLY_DIFF,9:YTD_ACTUAL,10:YTD_TARGET,11:YTD_DIFF};
+
     var count=0;
     
     var week=1;
@@ -41,6 +48,12 @@ $(document).ready(function(e){
             {data:'wed'},
             {data:'thur'},
             {data:'fri'},
+            {data:'weekly_actual'},
+            {data:'weekly_target'},
+            {data:'weekly_difference'},
+            {data:'ytd_actual'},
+            {data:'ytd_target'},
+            {data:'ytd_difference'}
             /*{
                 data:null,
                 render:function(o)
@@ -58,6 +71,14 @@ $(document).ready(function(e){
         let date= $(this).find("span").text();
         //console.log("date = "+date);
         $("#date").val(moment(date).format("YYYY-MM-DD"));
+        $("#date, #date_label").css("visibility","visible");
+        if(pos>5)
+        {
+            $("#date, #date_label").css("visibility","hidden");
+            $("#date").val("2018-01-01");
+            $("#rtype").val(type[pos]);
+        }
+
         $("#day").text(days[pos]);
 
         $("#day0").val(pos);
