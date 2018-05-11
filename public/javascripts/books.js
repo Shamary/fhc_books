@@ -11,7 +11,8 @@ $(document).ready(function(e){
     var table=$("#books_table").DataTable({
         ordering:false,
         dom:"Bfrtip",
-        buttons:[{extend:"excelHtml5", text:"Save as Excel"}, {extend:"pdf", text:"Save as PDF"}],
+        autoWidth:false,
+        buttons:[{extend:"excelHtml5", text:"Save as Excel", className:"exportButton"}, {extend:"pdf", text:"Save as PDF",className:"exportButton"}],
         ajax:{
             url:"/books_data",
             type:"POST",
@@ -24,7 +25,6 @@ $(document).ready(function(e){
             },
             dataSrc:'',
         },
-        
         columns:[
             {
                 data:null,
@@ -51,11 +51,13 @@ $(document).ready(function(e){
         ]
     });
     
-    $("th").click(function(){
+    $("th").click(function(){//edit column
 
         let pos=$(this).closest("th").index();
         //console.log("pos= "+pos);
-
+        let date= $(this).find("span").text();
+        //console.log("date = "+date);
+        $("#date").val(moment(date).format("YYYY-MM-DD"));
         $("#day").text(days[pos]);
 
         $("#day0").val(pos);
@@ -81,11 +83,20 @@ $(document).ready(function(e){
     
     selWeek(table);
     
-    function selWeek(table)
+    function selWeek(table)//select week
     {
         $("#sel_week").change(function(){
             count=0;
             table.ajax.url("/books_update").load();
+            $.post('/update_headings',{week:$("#sel_week").val()},function(result){
+
+                //console.log("result= "+result.mdate);
+                $("#mdate").text(result.mdate);
+                $("#tdate").text(result.tdate);
+                $("#wdate").text(result.wdate);
+                $("#thdate").text(result.thdate);
+                $("#fdate").text(result.fdate);
+            });
         });
     }
 });

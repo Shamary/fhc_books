@@ -16,6 +16,8 @@
     "pm2": "latest",
     "mysql": "latest",
     "express-handlebars": "latest",
-    "express-session": "latest"
+    "express-session": "latest",
+    "date-and-time": "latest",
+    "bcryptjs":"latest"
   }
 }

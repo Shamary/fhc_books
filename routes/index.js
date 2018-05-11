@@ -7,6 +7,7 @@ var controller=require("../controllers/controller");
 router.get('/', controller.homePage);
 router.post('/books_data',controller.getTableData);
 router.post('/books_update',controller.updateTable);
+router.post('/update_headings',controller.updateDateHeading);
 router.post('/update_db',controller.updateDB);
 
 module.exports = router;
