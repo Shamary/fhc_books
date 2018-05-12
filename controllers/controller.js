@@ -20,13 +20,13 @@ var getDay = function(result,day)
     return i;
 }
 
-var getType = function(result,type)
+var getType = function(result,type,ytd)
 {
     let i=0;
 
     for(i=0;i<result.length;i++)
     {
-        if(result[i].ftype_week==type)
+        if((!ytd&&result[i].ftype_week==type)||(ytd&&result[i].ftype_ytd==type))
         {
             break;
         }
@@ -67,7 +67,7 @@ var runAction=function(result,action,type)
             if(result[getType(result,"loans")])
             {
                 let lpos= getType(result,"loans"), dpos=getType(result,"deposits"), cpos=getType(result,"debit_cards"), 
-                    mpos=getType(result,"debit_cards"), ipos=getType(result,"iTransact"),fpos=getType(result,"FIP");
+                    mpos=getType(result,"membership"), ipos=getType(result,"iTransact"),fpos=getType(result,"FIP");
                     
                 data= {loans:{weekly_actual: result[lpos].weekly_actual, 
                                 weekly_target:result[lpos].weekly_target,
@@ -99,10 +99,10 @@ var runAction=function(result,action,type)
                    fip:{ytd_actual: null, ytd_target:null,ytd_difference:null}};
             
 
-            if(result[getType(result,"loans")])
+            if(result[getType(result,"loans",true)])
             {
-                let lpos= getType(result,"loans"), dpos=getType(result,"deposits"), cpos=getType(result,"debit_cards"), 
-                    mpos=getType(result,"debit_cards"), ipos=getType(result,"iTransact"),fpos=getType(result,"FIP");
+                let lpos= getType(result,"loans",true), dpos=getType(result,"deposits",true), cpos=getType(result,"debit_cards",true), 
+                    mpos=getType(result,"debit_cards",true), ipos=getType(result,"iTransact",true),fpos=getType(result,"FIP",true);
 
                 data= {loans:{ytd_actual: result[lpos].ytd_actual, 
                                 ytd_target:result[lpos].ytd_target,
@@ -140,49 +140,7 @@ var handleResult= function(result)
 
     let weekly = runAction(result,null,2);
     let ytd = runAction(result,null,3);
-    /*
-    let weekly_a_loans= runAction(resultresult[lpos],null,2).weekly_actual;
-    let weekly_a_deposits= runAction(resultresult[dpos],null,2).weekly_actual;
-    let weekly_a_cards= runAction(resultresult[cpos],null,2).weekly_actual;
-    let weekly_a_members= runAction(resultresult[mpos],null,2).weekly_actual;
-    let weekly_a_itransact= runAction(resultresult[ipos],null,2).weekly_actual;
-    let weekly_a_fip= runAction(resultresult[fpos],null,2).weekly_actual;
-
-    let weekly_t_loans= runAction(resultresult[lpos],null,2).weekly_target;
-    let weekly_t_deposits= runAction(resultresult[dpos],null,2).weekly_target;
-    let weekly_t_cards= runAction(resultresult[cpos],null,2).weekly_target;
-    let weekly_t_members= runAction(resultresult[mpos],null,2).weekly_target;
-    let weekly_t_itransact= runAction(resultresult[ipos],null,2).weekly_target;
-    let weekly_t_fip= runAction(resultresult[fpos],null,2).weekly_target;
-
-    let weekly_d_loans= runAction(resultresult[lpos],null,2).weekly_difference;
-    let weekly_d_deposits= runAction(resultresult[dpos],null,2).weekly_difference;
-    let weekly_d_cards= runAction(resultresult[cpos],null,2).weekly_difference;
-    let weekly_d_members= runAction(resultresult[mpos],null,2).weekly_difference;
-    let weekly_d_itransact= runAction(resultresult[ipos],null,2).weekly_difference;
-    let weekly_d_fip= runAction(resultresult[fpos],null,2).weekly_difference;
-
-    let ytd_a_loans= runAction(resultresult[lpos],null,3).ytd_actual;
-    let ytd_a_deposits= runAction(resultresult[dpos],null,3).ytd_actual;
-    let ytd_a_cards= runAction(resultresult[cpos],null,3).ytd_actual;
-    let ytd_a_members= runAction(resultresult[mpos],null,3).ytd_actual;
-    let ytd_a_itransact= runAction(resultresult[ipos],null,3).ytd_actual;
-    let ytd_a_fip= runAction(resultresult[fpos],null,3).ytd_actual;
-
-    let ytd_t_loans= runAction(resultresult[lpos],null,3).ytd_target;
-    let ytd_t_deposits= runAction(resultresult[dpos],null,3).ytd_target;
-    let ytd_t_cards= runAction(resultresult[cpos],null,3).ytd_target;
-    let ytd_t_members= runAction(resultresult[mpos],null,3).ytd_target;
-    let ytd_t_itransact= runAction(resultresult[ipos],null,3).ytd_target;
-    let ytd_t_fip= runAction(resultresult[fpos],null,3).ytd_target;
-
-    let ytd_d_loans= runAction(resultresult[lpos],null,3).ytd_difference;
-    let ytd_d_deposits= runAction(resultresult[dpos],null,3).ytd_difference;
-    let ytd_d_cards= runAction(resultresult[cpos],null,3).ytd_difference;
-    let ytd_d_members= runAction(resultresult[mpos],null,3).ytd_difference;
-    let ytd_d_itransact= runAction(resultresult[ipos],null,3).ytd_difference;
-    let ytd_d_fip= runAction(resultresult[fpos],null,3).ytd_difference;*/
-
+    
     let merge=
     [{mon:monday.loans,tue:tuesday.loans,wed:wednesday.loans,thur:thursday.loans,fri:friday.loans, 
       weekly_actual:weekly.loans.weekly_actual, weekly_target:weekly.loans.weekly_target, weekly_difference:weekly.loans.weekly_difference, 
@@ -284,8 +242,10 @@ exports.updateTable=function(req,res)
     let week=req.body.week;
     //console.log("week= "+week);
 
-    var sql="SELECT loans,deposits,debit_cards,membership,iTransact,FIP,day FROM books WHERE week="+week+"";
-    
+    //var sql="SELECT loans,deposits,debit_cards,membership,iTransact,FIP,day FROM books WHERE week="+week+"";
+    var sql=`SELECT * FROM (SELECT week,loans,deposits,debit_cards,membership,iTransact,FIP,day FROM books WHERE week= ${week}) b 
+    LEFT JOIN books_weekly bw ON b.week = bw.week LEFT JOIN books_ytd ytd ON b.week=ytd.week`;
+
     db.query(sql,function(err,result)
     {
         if(err)
@@ -362,7 +322,7 @@ exports.updateDB=function(req,res)
 
     all_sql={0: "SELECT * FROM books WHERE day = "+day+" AND week = "+week,
              1: "SELECT weekly_actual FROM books_weekly WHERE week = "+week,
-             2: "SELECT weekly__target FROM books_weekly WHERE week = "+week,
+             2: "SELECT weekly_target FROM books_weekly WHERE week = "+week,
              3: "SELECT weekly_difference FROM books_weekly WHERE week = "+week,
              4: "SELECT ytd_actual FROM books_ytd WHERE week = "+week,
              5: "SELECT ytd_target FROM books_ytd WHERE week = "+week,
@@ -379,22 +339,67 @@ exports.updateDB=function(req,res)
 
         if(result.length>0)
         {
-            if(type>0)
+            let values=[];
+            if(rtype==0)
             {
                 sql= "UPDATE books SET loans = "+loans+","+"deposits="+deposits+",debit_cards="+cards+",membership="+membership+
                 ",iTransact="+iTransact+",FIP="+FIP+", bdate = '"+bdate+"' WHERE week = "+week+" AND day = "+day+"";
             }
-            else if(type==WEEKLY_ACTUAL)
+            else 
             {
-                sql= "UPDATE books_weekly SET ftype_week = loans, weekly_actual = "+loans+
-                     "UPDATE books_weekly SET ftype_week = deposits, weekly_actual = "+deposits+
-                     "UPDATE books_weekly SET ftype_week = debit_cards, weekly_actual = "+cards+
-                     "UPDATE books_weekly SET ftype_week = membership, weekly_actual = "+membership+
-                     "UPDATE books_weekly SET ftype_week = iTransact, weekly_actual = "+iTransact+
-                     "UPDATE books_weekly SET ftype_week = FIP, weekly_actual = "+fip;
+                let table="", cols=[];
+
+                if(rtype==WEEKLY_ACTUAL)
+                {
+                    table="books_weekly";
+                    cols[0]="ftype_week";
+                    cols[1]= "weekly_actual";                    
+                }
+                else if(rtype==WEEKLY_TARGET)
+                {
+                    table="books_weekly";
+                    cols[0]="ftype_week";
+                    cols[1]= "weekly_target";                    
+                }
+                else if(rtype==WEEKLY_DIFF)
+                {
+                    table="books_weekly";
+                    cols[0]="ftype_week";
+                    cols[1]= "weekly_difference";                    
+                }
+                else if(rtype==YTD_ACTUAL)
+                {
+                    table="books_ytd";
+                    cols[0]="ftype_ytd";
+                    cols[1]= "ytd_actual";                    
+                }
+                else if(rtype==YTD_TARGET)
+                {
+                    table="books_ytd";
+                    cols[0]="ftype_ytd";
+                    cols[1]= "ytd_target";                    
+                }
+                else if(rtype==YTD_DIFF)
+                {
+                    table="books_ytd";
+                    cols[0]="ftype_ytd";
+                    cols[1]= "ytd_difference";                    
+                }
+                
+                sql= `UPDATE ${table} SET ${cols[1]} = ${loans} WHERE week = ${week} AND ${cols[0]} = 'loans';
+                     UPDATE ${table} SET ${cols[1]} = ${deposits} WHERE week = ${week} AND ${cols[0]} = 'deposits';
+                     UPDATE ${table} SET ${cols[1]} = ${cards} WHERE week = ${week} AND ${cols[0]} = 'debit_cards';
+                     UPDATE ${table} SET ${cols[1]} = ${membership} WHERE week = ${week} AND ${cols[0]} = 'membership';
+                     UPDATE ${table} SET ${cols[1]} = ${iTransact} WHERE week = ${week} AND ${cols[0]} = 'iTransact';
+                     UPDATE ${table} SET ${cols[1]} = ${FIP} WHERE week = ${week} AND ${cols[0]} = 'FIP';`;
+
+                /*sql= `UPDATE ${table} SET ${cols[1]} = ? WHERE week = ? AND ${cols[0]} = ?`;
+
+                //values=[['loans',loans],['deposits',deposits],['debit_cards',cards],['membership',membership],['iTransact',iTransact],['FIP',FIP]];
+                values=[[loans,week,'loans']];*/
             }
 
-            db.query(sql,function(err){
+            db.query(sql/*,values*/,function(err){
                 if(err)
                 {
                     throw err;
@@ -410,14 +415,59 @@ exports.updateDB=function(req,res)
             sql= "INSERT INTO books(week,bdate,day,loans,deposits,debit_cards,membership,iTransact,FIP) VALUES ?";
             values=[[week,bdate,day,loans,deposits,cards,membership,iTransact,FIP]];
 
-            if(rtype==WEEKLY_ACTUAL)
+            if(rtype>0)
             {
-                sql= "INSERT INTO books_weekly(ftype_week,week,weekly_actual) VALUES ('loans',"+week+","+loans+"),"+
-                     "('deposits',"+week+","+deposits+"),"+
-                     "('debit_cards',"+week+","+cards+"),"+
-                     "('membership',"+week+","+membership+"),"+
-                     "('iTransact',"+week+","+iTransact+"),"+
-                     "('FIP',"+week+","+FIP+")";
+                let table="", cols=[]; 
+
+                if(rtype==WEEKLY_ACTUAL)
+                {
+                    table="books_weekly";
+                    cols[0]="ftype_week";
+                    cols[1]="week";
+                    cols[2]="weekly_actual";
+                }
+                else if(rtype==WEEKLY_TARGET)
+                {
+                    table="books_weekly";
+                    cols[0]="ftype_week";
+                    cols[1]="week";
+                    cols[2]="weekly_target";
+                }
+                else if(rtype==WEEKLY_DIFF)
+                {
+                    table="books_weekly";
+                    cols[0]="ftype_week";
+                    cols[1]="week";
+                    cols[2]="weekly_difference";
+                }
+                else if(rtype==YTD_ACTUAL)
+                {
+                    table="books_ytd";
+                    cols[0]="ftype_ytd";
+                    cols[1]="week";
+                    cols[2]="ytd_actual";
+                }
+                else if(rtype==YTD_TARGET)
+                {
+                    table="books_ytd";
+                    cols[0]="ftype_ytd";
+                    cols[1]="week";
+                    cols[2]="ytd_target";
+                }
+                else if(rtype==YTD_DIFF)
+                {
+                    table="books_ytd";
+                    cols[0]="ftype_ytd";
+                    cols[1]="week";
+                    cols[2]="ytd_difference";
+                }
+
+                sql= `INSERT INTO ${table}(${cols[0]},${cols[1]},${cols[2]}) VALUES ('loans',${week},${loans}),
+                     ('deposits',${week},${deposits}),
+                     ('debit_cards',${week},${cards}),
+                     ('membership',${week},${membership}),
+                     ('iTransact',${week},${iTransact}),
+                     ('FIP',${week},${FIP})`;
                 values=[[]];
             }
 
