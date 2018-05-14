@@ -14,6 +14,7 @@ var routes = require('./routes/index');
 
 var handlebars=require("express-handlebars");
 
+var flash = require('express-flash');
 //models(user).addUser();
 //models(user).getUser();
 //models(user).removeUser();
@@ -30,15 +31,19 @@ app.set('view engine', 'handlebars');
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+//app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
-  secret: 'keyboard cat',
+  secret: '#books_secret_key#',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: true }
-}))
+  cookie: { secure: false },
+  maxAge: 18000000
+}));
+
+app.use(flash());
+
 
 app.use('/', routes);
 //app.use('/users', users);

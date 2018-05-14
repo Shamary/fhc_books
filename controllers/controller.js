@@ -102,7 +102,7 @@ var runAction=function(result,action,type)
             if(result[getType(result,"loans",true)])
             {
                 let lpos= getType(result,"loans",true), dpos=getType(result,"deposits",true), cpos=getType(result,"debit_cards",true), 
-                    mpos=getType(result,"debit_cards",true), ipos=getType(result,"iTransact",true),fpos=getType(result,"FIP",true);
+                    mpos=getType(result,"membership",true), ipos=getType(result,"iTransact",true),fpos=getType(result,"FIP",true);
 
                 data= {loans:{ytd_actual: result[lpos].ytd_actual, 
                                 ytd_target:result[lpos].ytd_target,
@@ -179,6 +179,8 @@ var setupSQL = function(sql,type)
 
 exports.homePage=function(req,res)
 {
+    let position=req.session.position == "manager";
+
     let weeks=[];
     let i=0;
 
@@ -202,7 +204,7 @@ exports.homePage=function(req,res)
         let thdate=runAction(result[getDay(result,4)],date.format);
         let fdate=runAction(result[getDay(result,5)],date.format);
 
-        res.render('home', { title: 'Books', weeks:weeks, mdate:mdate, tdate:tdate, wdate:wdate, thdate:thdate, fdate:fdate });
+        res.render('home', { title: 'Books', weeks:weeks, mdate:mdate, tdate:tdate, wdate:wdate, thdate:thdate, fdate:fdate , manager:position});
     });
     
 }
@@ -214,7 +216,7 @@ exports.getTableData = function(req,res)
     let week=req.body.week;
     //console.log("week= "+week);
     var sql=`SELECT * FROM (SELECT week,loans,deposits,debit_cards,membership,iTransact,FIP,day FROM books WHERE week=1) b 
-             LEFT JOIN books_weekly bw ON b.week = bw.week LEFT JOIN books_ytd ytd ON b.week=ytd.week`;
+             LEFT JOIN books_weekly bw ON b.week = bw.wweek LEFT JOIN books_ytd ytd ON b.week=ytd.yweek`;
     
     db.query(sql,function(err,result)
     {
@@ -223,9 +225,9 @@ exports.getTableData = function(req,res)
             throw err;
         }
         
-        let final=[{mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null},
+        let final=setNullFinal();/*[{mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null},
             {mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null},
-            {mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null}];
+            {mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null}];*/
         
         if(result.length>0)
         {
@@ -244,7 +246,7 @@ exports.updateTable=function(req,res)
 
     //var sql="SELECT loans,deposits,debit_cards,membership,iTransact,FIP,day FROM books WHERE week="+week+"";
     var sql=`SELECT * FROM (SELECT week,loans,deposits,debit_cards,membership,iTransact,FIP,day FROM books WHERE week= ${week}) b 
-    LEFT JOIN books_weekly bw ON b.week = bw.week LEFT JOIN books_ytd ytd ON b.week=ytd.week`;
+    LEFT JOIN books_weekly bw ON b.week = bw.wweek LEFT JOIN books_ytd ytd ON b.week=ytd.yweek`;
 
     db.query(sql,function(err,result)
     {
@@ -253,9 +255,9 @@ exports.updateTable=function(req,res)
             throw err;
         }
         
-        let final=[{mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null},
+        let final=setNullFinal();/*[{mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null},
                    {mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null},
-                   {mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null}];
+                   {mon:null,tue:null,wed:null,thur:null,fri:null},{mon:null,tue:null,wed:null,thur:null,fri:null}];*/
         
         if(result.length>0)
         {
@@ -321,12 +323,12 @@ exports.updateDB=function(req,res)
     let rtype= req.body.rtype;
 
     all_sql={0: "SELECT * FROM books WHERE day = "+day+" AND week = "+week,
-             1: "SELECT weekly_actual FROM books_weekly WHERE week = "+week,
-             2: "SELECT weekly_target FROM books_weekly WHERE week = "+week,
-             3: "SELECT weekly_difference FROM books_weekly WHERE week = "+week,
-             4: "SELECT ytd_actual FROM books_ytd WHERE week = "+week,
-             5: "SELECT ytd_target FROM books_ytd WHERE week = "+week,
-             6: "SELECT ytd_difference FROM books_ytd WHERE week = "+week};
+             1: "SELECT weekly_actual FROM books_weekly WHERE wweek = "+week,
+             2: "SELECT weekly_target FROM books_weekly WHERE wweek = "+week,
+             3: "SELECT weekly_difference FROM books_weekly WHERE wweek = "+week,
+             4: "SELECT ytd_actual FROM books_ytd WHERE yweek = "+week,
+             5: "SELECT ytd_target FROM books_ytd WHERE yweek = "+week,
+             6: "SELECT ytd_difference FROM books_ytd WHERE yweek = "+week};
 
     let sql="SELECT * FROM books WHERE day = "+day+" AND week = "+week;
     sql=all_sql[rtype];
@@ -353,45 +355,51 @@ exports.updateDB=function(req,res)
                 {
                     table="books_weekly";
                     cols[0]="ftype_week";
-                    cols[1]= "weekly_actual";                    
+                    cols[1]= "weekly_actual";
+                    cols[2]= "wweek";                    
                 }
                 else if(rtype==WEEKLY_TARGET)
                 {
                     table="books_weekly";
                     cols[0]="ftype_week";
-                    cols[1]= "weekly_target";                    
+                    cols[1]= "weekly_target";
+                    cols[2]= "wweek";                    
                 }
                 else if(rtype==WEEKLY_DIFF)
                 {
                     table="books_weekly";
                     cols[0]="ftype_week";
-                    cols[1]= "weekly_difference";                    
+                    cols[1]= "weekly_difference";
+                    cols[2]= "wweek";                    
                 }
                 else if(rtype==YTD_ACTUAL)
                 {
                     table="books_ytd";
                     cols[0]="ftype_ytd";
-                    cols[1]= "ytd_actual";                    
+                    cols[1]= "ytd_actual";
+                    cols[2]= "yweek";                    
                 }
                 else if(rtype==YTD_TARGET)
                 {
                     table="books_ytd";
                     cols[0]="ftype_ytd";
-                    cols[1]= "ytd_target";                    
+                    cols[1]= "ytd_target";
+                    cols[2]= "yweek";                    
                 }
                 else if(rtype==YTD_DIFF)
                 {
                     table="books_ytd";
                     cols[0]="ftype_ytd";
-                    cols[1]= "ytd_difference";                    
+                    cols[1]= "ytd_difference";
+                    cols[2]= "yweek";                    
                 }
                 
-                sql= `UPDATE ${table} SET ${cols[1]} = ${loans} WHERE week = ${week} AND ${cols[0]} = 'loans';
-                     UPDATE ${table} SET ${cols[1]} = ${deposits} WHERE week = ${week} AND ${cols[0]} = 'deposits';
-                     UPDATE ${table} SET ${cols[1]} = ${cards} WHERE week = ${week} AND ${cols[0]} = 'debit_cards';
-                     UPDATE ${table} SET ${cols[1]} = ${membership} WHERE week = ${week} AND ${cols[0]} = 'membership';
-                     UPDATE ${table} SET ${cols[1]} = ${iTransact} WHERE week = ${week} AND ${cols[0]} = 'iTransact';
-                     UPDATE ${table} SET ${cols[1]} = ${FIP} WHERE week = ${week} AND ${cols[0]} = 'FIP';`;
+                sql= `UPDATE ${table} SET ${cols[1]} = ${loans} WHERE ${cols[2]} = ${week} AND ${cols[0]} = 'loans';
+                     UPDATE ${table} SET ${cols[1]} = ${deposits} WHERE ${cols[2]} = ${week} AND ${cols[0]} = 'deposits';
+                     UPDATE ${table} SET ${cols[1]} = ${cards} WHERE ${cols[2]} = ${week} AND ${cols[0]} = 'debit_cards';
+                     UPDATE ${table} SET ${cols[1]} = ${membership} WHERE ${cols[2]} = ${week} AND ${cols[0]} = 'membership';
+                     UPDATE ${table} SET ${cols[1]} = ${iTransact} WHERE ${cols[2]} = ${week} AND ${cols[0]} = 'iTransact';
+                     UPDATE ${table} SET ${cols[1]} = ${FIP} WHERE ${cols[2]} = ${week} AND ${cols[0]} = 'FIP';`;
 
                 /*sql= `UPDATE ${table} SET ${cols[1]} = ? WHERE week = ? AND ${cols[0]} = ?`;
 
@@ -423,42 +431,42 @@ exports.updateDB=function(req,res)
                 {
                     table="books_weekly";
                     cols[0]="ftype_week";
-                    cols[1]="week";
+                    cols[1]="wweek";
                     cols[2]="weekly_actual";
                 }
                 else if(rtype==WEEKLY_TARGET)
                 {
                     table="books_weekly";
                     cols[0]="ftype_week";
-                    cols[1]="week";
+                    cols[1]="wweek";
                     cols[2]="weekly_target";
                 }
                 else if(rtype==WEEKLY_DIFF)
                 {
                     table="books_weekly";
                     cols[0]="ftype_week";
-                    cols[1]="week";
+                    cols[1]="wweek";
                     cols[2]="weekly_difference";
                 }
                 else if(rtype==YTD_ACTUAL)
                 {
                     table="books_ytd";
                     cols[0]="ftype_ytd";
-                    cols[1]="week";
+                    cols[1]="yweek";
                     cols[2]="ytd_actual";
                 }
                 else if(rtype==YTD_TARGET)
                 {
                     table="books_ytd";
                     cols[0]="ftype_ytd";
-                    cols[1]="week";
+                    cols[1]="yweek";
                     cols[2]="ytd_target";
                 }
                 else if(rtype==YTD_DIFF)
                 {
                     table="books_ytd";
                     cols[0]="ftype_ytd";
-                    cols[1]="week";
+                    cols[1]="yweek";
                     cols[2]="ytd_difference";
                 }
 
@@ -480,8 +488,24 @@ exports.updateDB=function(req,res)
                 res.redirect("/");
             });
         }
-    })
-    
+    });
+}
 
-    
+var setNullFinal = function()
+{
+    let final=[{mon:null,tue:null,wed:null,thur:null,fri:null, weekly_actual:null, weekly_target:null, weekly_difference:null, 
+                ytd_actual:null, ytd_target:null, ytd_difference:null},
+                {mon:null,tue:null,wed:null,thur:null,fri:null, weekly_actual:null, weekly_target:null, weekly_difference:null, 
+                    ytd_actual:null, ytd_target:null, ytd_difference:null},
+                {mon:null,tue:null,wed:null,thur:null,fri:null, weekly_actual:null, weekly_target:null, weekly_difference:null, 
+                    ytd_actual:null, ytd_target:null, ytd_difference:null},
+                {mon:null,tue:null,wed:null,thur:null,fri:null, weekly_actual:null, weekly_target:null, weekly_difference:null, 
+                    ytd_actual:null, ytd_target:null, ytd_difference:null},
+                {mon:null,tue:null,wed:null,thur:null,fri:null, weekly_actual:null, weekly_target:null, weekly_difference:null, 
+                    ytd_actual:null, ytd_target:null, ytd_difference:null},
+                {mon:null,tue:null,wed:null,thur:null,fri:null, weekly_actual:null, weekly_target:null, weekly_difference:null, 
+                    ytd_actual:null, ytd_target:null, ytd_difference:null}
+    ];
+
+    return JSON.stringify(final);
 }

@@ -18,6 +18,7 @@
     "express-handlebars": "latest",
     "express-session": "latest",
     "date-and-time": "latest",
-    "bcryptjs":"latest"
+    "bcryptjs": "latest",
+    "express-flash": "latest"
   }
 }
