@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "scripts": {
     "start": "pm2 start ./bin/www",
+<<<<<<< HEAD
     "restart": "pm2 restart ./bin/www",
     "stop": "pm2 stop ./bin/www"
+=======
+    "restart": "pm2 restart ./bin/www"
+>>>>>>> 8008b9e091b310b4513cd5a0add2883eeaa576ad
   },
   "dependencies": {
     "body-parser": "~1.12.4",
@@ -17,9 +21,13 @@
     "pm2": "latest",
     "mysql": "latest",
     "express-handlebars": "latest",
+<<<<<<< HEAD
     "express-session": "latest",
     "date-and-time": "latest",
     "bcryptjs": "latest",
     "express-flash": "latest"
+=======
+    "express-session": "latest"
+>>>>>>> 8008b9e091b310b4513cd5a0add2883eeaa576ad
   }
 }
